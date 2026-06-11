@@ -1,0 +1,410 @@
+{
+  "name": "JachAI Telegram Claim Verification",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ]
+      },
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -900,
+        0
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_WITH_YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg = $json.message || {};\nconst chat = msg.chat || {};\nconst from = msg.from || {};\nconst text = (msg.text || msg.caption || \"\").trim();\n\nlet route = \"verify\";\nif (!text) route = \"invalid\";\nelse if (text.startsWith(\"/start\")) route = \"start\";\nelse if (text.startsWith(\"/help\")) route = \"help\";\nelse if (text.startsWith(\"/about\")) route = \"about\";\n\nreturn [{\n  json: {\n    route,\n    chat_id: chat.id,\n    message_id: msg.message_id,\n    text,\n    username: from.username || \"\",\n    first_name: from.first_name || \"\",\n    last_name: from.last_name || \"\",\n    chat_type: chat.type || \"private\",\n    raw: $json\n  }\n}];"
+      },
+      "id": "router-code",
+      "name": "Route Telegram Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.route }}",
+              "operation": "equal",
+              "value2": "start"
+            }
+          ]
+        }
+      },
+      "id": "if-start",
+      "name": "IF /start",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -460,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id || $node[\"Route Telegram Message\"].json[\"chat_id\"] || ($json.chat && $json.chat.id) || ($json.message && $json.message.chat && $json.message.chat.id) }}",
+        "text": "👋 Welcome to JachAI.\n\nSend me any suspicious claim, viral message, news text, or URL. I’ll verify it using live evidence, retrieval, reranking, and AI reasoning.\n\nExample:\nIs the government giving free 50GB internet?",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "send-start",
+      "name": "Send /start Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -220,
+        -280
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_WITH_YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.route }}",
+              "operation": "equal",
+              "value2": "help"
+            }
+          ]
+        }
+      },
+      "id": "if-help",
+      "name": "IF /help",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        -20
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "How to use JachAI:\n\n1. Send a claim, viral post, news text, or URL\n2. Wait while JachAI searches evidence\n3. Get a verdict with confidence and sources\n\nSupported: Bangla, English, Hindi, Banglish, Hinglish, Mixed text, and URLs.",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "send-help",
+      "name": "Send /help Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        20,
+        -120
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_WITH_YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.route }}",
+              "operation": "equal",
+              "value2": "about"
+            }
+          ]
+        }
+      },
+      "id": "if-about",
+      "name": "IF /about",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        20,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "🧠 <b>About JachAI</b>\n\nJachAI is a multilingual fact-checking assistant for South Asian misinformation. It checks claims using live search, evidence retrieval, source scoring, reranking, and AI-based verdict generation.",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "send-about",
+      "name": "Send /about Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        260,
+        40
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_WITH_YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.route }}",
+              "operation": "equal",
+              "value2": "invalid"
+            }
+          ]
+        }
+      },
+      "id": "if-invalid",
+      "name": "IF Invalid Message",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        260,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "Please send a text claim, viral message, news text, or URL for JachAI to verify.\n\nImage support can be added in the next workflow version.",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "send-invalid",
+      "name": "Send Invalid Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        500,
+        200
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_WITH_YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "🔎 JachAI is checking this claim...\n\nI’m searching live sources, comparing evidence, and preparing a verdict. This may take a few seconds.",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "send-checking",
+      "name": "Send Checking Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        500,
+        440
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_WITH_YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }\nfunction htmlEscape(value) {\n  return String(value ?? \"\")\n    .replace(/&/g, \"&amp;\")\n    .replace(/</g, \"&lt;\")\n    .replace(/>/g, \"&gt;\")\n    .replace(/\\\"/g, \"&quot;\")\n    .replace(/'/g, \"&#39;\");\n}\nfunction pick(obj, paths) {\n  for (const path of paths) {\n    const parts = path.split(\".\");\n    let cur = obj;\n    for (const part of parts) cur = cur?.[part];\n    if (cur !== undefined && cur !== null && cur !== \"\") return cur;\n  }\n  return null;\n}\nfunction normalizeConfidence(value) {\n  const num = Number(value);\n  if (!Number.isFinite(num)) return null;\n  return num <= 1 ? Math.round(num * 100) : Math.round(num);\n}\nconst input = $input.first().json;\nconst backendUrl = ($env.JACHAI_BACKEND_URL || \"https://your-backend-domain.com\").replace(/\\/$/, \"\");\nconst internalKey = $env.JACHAI_INTERNAL_API_KEY || \"\";\nif (!internalKey) {\n  return [{ json: { chat_id: input.chat_id, telegram_text: \"⚠️ <b>JachAI internal API key is missing in n8n.</b>\\n\\nSet <code>JACHAI_INTERNAL_API_KEY</code> in your n8n environment before using this workflow.\" } }];\n}\nconst submitPayload = {\n  platform: \"telegram\",\n  sender_id: String(input.chat_id),\n  message_id: String(input.message_id || \"\"),\n  text: input.text,\n  metadata: {\n    username: input.username || \"\",\n    first_name: input.first_name || \"\",\n    last_name: input.last_name || \"\",\n    chat_type: input.chat_type || \"private\"\n  }\n};\nlet submitResponse;\ntry {\n  submitResponse = await fetch(`${backendUrl}/api/v1/webhooks/inbound-message`, {\n    method: \"POST\",\n    headers: { \"Content-Type\": \"application/json\", \"X-Internal-API-Key\": internalKey },\n    body: JSON.stringify(submitPayload)\n  });\n} catch (error) {\n  return [{ json: { chat_id: input.chat_id, telegram_text: `⚠️ <b>JachAI backend is unreachable.</b>\\n\\n${htmlEscape(error.message)}` } }];\n}\nif (!submitResponse.ok) {\n  const errText = await submitResponse.text();\n  return [{ json: { chat_id: input.chat_id, telegram_text: `⚠️ <b>JachAI could not start verification.</b>\\n\\nHTTP ${submitResponse.status}\\n${htmlEscape(errText.slice(0, 800))}` } }];\n}\nconst submitData = await submitResponse.json();\nlet jobId = pick(submitData, [\"job.id\", \"job_id\", \"data.job.id\", \"data.job_id\"]);\nlet claimId = pick(submitData, [\"claim.id\", \"job.claim_id\", \"claim_id\", \"data.claim.id\", \"data.job.claim_id\"]);\nlet claim = submitData.claim || submitData.data?.claim || null;\nlet status = String(pick(submitData, [\"job.status\", \"status\", \"data.job.status\"]) || \"\").toLowerCase();\nif (claim?.id && !claimId) claimId = claim.id;\nif (!jobId && !claimId) {\n  return [{ json: { chat_id: input.chat_id, telegram_text: \"⚠️ <b>JachAI started but did not return a job ID or claim ID.</b>\\n\\nPlease check the inbound webhook response shape.\" } }];\n}\nlet lastError = null;\nconst maxAttempts = Number($env.JACHAI_TELEGRAM_MAX_POLL_ATTEMPTS || 75);\nconst delayMs = Number($env.JACHAI_TELEGRAM_POLL_DELAY_MS || 5000);\nfor (let attempt = 1; attempt <= maxAttempts; attempt++) {\n  if (!jobId || claimId || claim) break;\n  await sleep(delayMs);\n  try {\n    const jobResponse = await fetch(`${backendUrl}/api/v1/verification-jobs/${jobId}`, {\n      method: \"GET\",\n      headers: { \"X-Internal-API-Key\": internalKey }\n    });\n    if (!jobResponse.ok) {\n      lastError = `Job poll HTTP ${jobResponse.status}`;\n      continue;\n    }\n    const jobData = await jobResponse.json();\n    status = String(pick(jobData, [\"status\", \"job.status\", \"data.status\"]) || \"\").toLowerCase();\n    claimId = pick(jobData, [\"claim_id\", \"job.claim_id\", \"data.claim_id\", \"result.claim_id\"]) || claimId;\n    if ([\"failed\", \"error\", \"cancelled\", \"canceled\"].includes(status)) {\n      const reason = pick(jobData, [\"error_message\", \"message\", \"job.error_message\", \"data.error_message\"]) || \"Verification failed.\";\n      return [{ json: { chat_id: input.chat_id, telegram_text: `❌ <b>JachAI verification failed.</b>\\n\\n${htmlEscape(reason)}` } }];\n    }\n  } catch (error) {\n    lastError = error.message;\n  }\n}\nif (!claim && claimId) {\n  let claimResponse;\n  try {\n    claimResponse = await fetch(`${backendUrl}/api/v1/claims/${claimId}`, {\n      method: \"GET\",\n      headers: { \"X-Internal-API-Key\": internalKey }\n    });\n  } catch (error) {\n    return [{ json: { chat_id: input.chat_id, telegram_text: `⚠️ <b>Could not fetch final claim result.</b>\\n\\n${htmlEscape(error.message)}` } }];\n  }\n  if (!claimResponse.ok) {\n    const errText = await claimResponse.text();\n    return [{ json: { chat_id: input.chat_id, telegram_text: `⚠️ <b>Could not fetch final claim result.</b>\\n\\nHTTP ${claimResponse.status}\\n${htmlEscape(errText.slice(0, 800))}` } }];\n  }\n  const claimPayload = await claimResponse.json();\n  claim = claimPayload.claim || claimPayload.data?.claim || claimPayload;\n}\nif (!claim) {\n  return [{ json: { chat_id: input.chat_id, telegram_text: `⏳ <b>JachAI is still processing this claim.</b>\\n\\nPlease try again shortly.${lastError ? `\\n\\nDebug: ${htmlEscape(lastError)}` : \"\"}` } }];\n}\nconst verdict = claim.verdict || claim.final_verdict || \"Unknown\";\nconst confidencePercent = normalizeConfidence(claim.confidence ?? claim.confidence_score ?? null);\nconst confidenceLabel = claim.confidence_label || \"\";\nconst extractedClaim = claim.extracted_claim || claim.cleaned_text || claim.raw_text || input.text;\nconst summary = claim.user_response || claim.share_summary || claim.explanation || \"No summary available.\";\nconst explanation = claim.explanation || \"\";\nconst emojiMap = {\n  \"Likely True\": \"✅\",\n  \"Likely False\": \"❌\",\n  \"Misleading\": \"⚠️\",\n  \"Not Enough Evidence\": \"❓\"\n};\nconst emoji = emojiMap[verdict] || \"🧠\";\nconst evidence = (claim.evidence || claim.sources || claim.evidence_sources || []).slice(0, 3);\nconst sources = evidence.map((source, index) => {\n  const title = htmlEscape(source.title || source.publisher || `Source ${index + 1}`);\n  const url = htmlEscape(source.url || \"\");\n  return url ? `${index + 1}. <a href=\"${url}\">${title}</a>` : `${index + 1}. ${title}`;\n}).join(\"\\n\");\nconst confidenceText = confidencePercent !== null\n  ? `${htmlEscape(confidenceLabel || \"Confidence\")} (${confidencePercent}%)`\n  : htmlEscape(confidenceLabel || \"Unknown\");\nlet text = `${emoji} <b>JachAI Verdict:</b> ${htmlEscape(verdict)}\\n\\n`;\ntext += `<b>Confidence:</b> ${confidenceText}\\n\\n`;\ntext += `<b>Claim checked:</b>\\n${htmlEscape(extractedClaim).slice(0, 700)}\\n\\n`;\ntext += `<b>Summary:</b>\\n${htmlEscape(summary).slice(0, 1000)}\\n\\n`;\nif (explanation && explanation !== summary) {\n  text += `<b>Why:</b>\\n${htmlEscape(explanation).slice(0, 700)}\\n\\n`;\n}\ntext += `<b>Sources:</b>\\n${sources || \"No strong public sources found.\"}\\n\\n`;\ntext += `<i>Job ID:</i> <code>${htmlEscape(String(jobId || \"n/a\"))}</code>`;\nreturn [{ json: { chat_id: input.chat_id, claim_id: claim.id || claimId, job_id: jobId, telegram_text: text } }];"
+      },
+      "id": "submit-poll-format",
+      "name": "Submit to JachAI, Poll, Format Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        740,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.telegram_text }}",
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "disable_web_page_preview": true
+        }
+      },
+      "id": "send-final",
+      "name": "Send Final Verdict",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        980,
+        440
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_WITH_YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Route Telegram Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Telegram Message": {
+      "main": [
+        [
+          {
+            "node": "IF /start",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF /start": {
+      "main": [
+        [
+          {
+            "node": "Send /start Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF /help",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF /help": {
+      "main": [
+        [
+          {
+            "node": "Send /help Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF /about",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF /about": {
+      "main": [
+        [
+          {
+            "node": "Send /about Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF Invalid Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Invalid Message": {
+      "main": [
+        [
+          {
+            "node": "Send Invalid Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Checking Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Checking Message": {
+      "main": [
+        [
+          {
+            "node": "Submit to JachAI, Poll, Format Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit to JachAI, Poll, Format Reply": {
+      "main": [
+        [
+          {
+            "node": "Send Final Verdict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "08605f5b-0f96-468c-8023-9e44b09ab122",
+  "triggerCount": 1,
+  "tags": [
+    {
+      "name": "JachAI"
+    },
+    {
+      "name": "Telegram"
+    }
+  ]
+}
