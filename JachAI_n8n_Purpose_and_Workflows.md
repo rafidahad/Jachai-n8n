@@ -368,7 +368,7 @@ GET /api/v1/claims/{claim_id}
 ### n8n environment variables
 
 ```env
-JACHAI_BACKEND_URL=https://api-jachai.rafidahad.me
+JACHAI_BACKEND_URL=https://api.jachai.example
 JACHAI_INTERNAL_API_KEY=your_backend_internal_key
 JACHAI_TELEGRAM_MAX_POLL_ATTEMPTS=75
 JACHAI_TELEGRAM_POLL_DELAY_MS=5000
